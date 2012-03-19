@@ -1,6 +1,35 @@
-# import arcpy
 from urllib  import urlopen  # used to retrieve online information
 from xml.dom import minidom  # used to parse XML content
+
+
+# ========== User-defined functions ==========
+def getData(item):
+    # This function expects a USGS GeoRSS item.
+    # Returns a Python dictionary.
+    nodeList = item.childNodes  # Extract item's child nodes
+
+    # These dictionary keys match the USGS GeoRSS item nodes
+    keys = ['full date', 'description', 'date', 'url', 'lat', 'long', 'class',
+            'set', 'depth', 'guid']
+
+    # This algorithm grabs the child nodes for each node in the node list.
+    # Since every node is atomic, its node list is singular. The values
+    # are appended to the values list. However, changes are required to
+    # parse the description that takes the form:
+    #     'M [magnitude], [title]'
+    #
+    # The [title] component may have comma separated names. This algorithm
+    # returns only the magnitude and the first portion of the title.
+    # The magnitude portion includes the "M " that is parsed out. These
+    # values are appended to the dictionary with appropriate keys.
+    x = []  # List to be populated below to for dictionary values
+    for child in [node.childNodes for node in nodeList]:
+        x.append(child[0].nodeValue)
+    x              = dict(zip(keys, x))
+    m, t           = x['description'].split(', ')[0:2]
+    x['title']     = t
+    x['magnitude'] = m[2:]
+    return x
 
 
 
@@ -11,50 +40,15 @@ from xml.dom import minidom  # used to parse XML content
 # Capture GeoRSS XML and isolate its 'item' elements
 #===== At this time, hardcoding the past hour RSS for prototyping =====
 url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1hour-M0.xml"
-doc   = minidom.parse(urlopen(url))       # XML document
-items = doc.getElementsByTagName("item")  # Want to avoid same-name elements in root.
-                                          # Returns list of 'item' document elements.
+doc   = minidom.parse(urlopen(url)) # XML document
+items = doc.getElementsByTagName("item") # Want to avoid same-name elements in root.
+                                         # Returns list of 'item' document elements.
 
 
 
-# Initialize Python list elements for attributes
-lat    = []  # Latitude
-lng    = []  # Longitude
-depth  = []  # Depth of quake (km)
-title  = []  # Description of location
-mag    = []  # Magnitude of quake
-mclass = []  # Class of magnitude (integer)
-time   = []  # Timestamp of event
-
-
-
-# Populate list elements with appropriate components from GeoRSS.
-# Each node below contains only 1 child node--viz., its own content.
+# Populate list with dictionaries of feed item components
+feed = []
 for item in items:
-    nodes = item.getElementsByTagName("geo:lat")
-    lat.append(nodes[0].childNodes[0].data)     # Only 1 lat node
+    feed.append(getData(item.childNodes))
 
-    nodes = item.getElementsByTagName("geo:long")
-    lng.append(nodes[0].childNodes[0].data)     # Only 1 lng node
-
-    nodes = item.getElementsByTagName("pubDate")
-    time.append(nodes[0].childNodes[0].data)    # Only 1 date node
-
-    nodes = item.getElementsByTagName("dc:subject")
-    mclass.append(nodes[0].childNodes[0].data)  # mclass is 1st subject
-
-    nodes = item.getElementsByTagName("dc:subject")
-    depth.append(nodes[2].childNodes[0].data)   # depth is 3rd subject
-
-    nodes = item.getElementsByTagName("title")  
-    node  = nodes[0].childNodes[0].data  # Title contains 'M [mag], [title]'.
-    m, t  = node.split(", ")[0:2]        # Break Title into components. Some 
-                                         # descriptions have commas, so only keep
-                                         # 1st two list elements in split.
-    mag.append(m[2:])                    # Ignore 1st two characters from LHS.
-    title.append(t)                      # Accept RHS as-is.
-
-
-
-# Begin creating ArcGIS feature classes based on user inputs
 
