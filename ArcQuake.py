@@ -27,27 +27,28 @@ time   = []  # Timestamp of event
 
 
 
-# Populate list elements with appropriate components from GeoRSS
+# Populate list elements with appropriate components from GeoRSS.
+# Each node below contains only 1 child node--viz., its own content.
 for item in items:
-    for node in item.getElementsByTagName("geo:lat"):
-        lat.append(node.childNodes[0].data)
+    nodes = item.getElementsByTagName("geo:lat")
+    lat.append(nodes[0].childNodes[0].data)     # Only 1 lat node
 
-    for node in item.getElementsByTagName("geo:long"):
-        lng.append(node.childNodes[0].data)
+    nodes = item.getElementsByTagName("geo:long")
+    lng.append(nodes[0].childNodes[0].data)     # Only 1 lng node
 
-    for node in item.getElementsByTagName("dc:subject"):
-        mclass.append(node.childNodes[0].data)
+    nodes = item.getElementsByTagName("dc:subject")
+    mclass.append(nodes[0].childNodes[0].data)  # mclass is 1st subject
 
-    for node in item.getElementsByTagName("dc:subject"):
-        depth.append(node.childNodes[2].data)  # 3rd dc:subject element in items
+    nodes = item.getElementsByTagName("dc:subject")
+    depth.append(nodes[2].childNodes[0].data)   # depth is 3rd subject
 
-    for node in item.getElementsByTagName("pubDate"):
-        time.append(node.childNodes[0].data)
+    nodes = item.getElementsByTagName("pubDate")
+    time.append(nodes[0].childNodes[0].data)    # Only 1 date node
 
-    for node in item.getElementsByTagName("title"):  # Title contains "M (mag), [title]"
-        m, t = node.childNodes[0].data.split(", ")    # Break Title into components
-        mag.append(m[2:])                             # Remove "M " from LHS
-        title.append(t)                               # Accept RHS as-is
+    nodes = item.getElementsByTagName("title")  # Title contains "M (mag), [title]"
+    m, t = node.childNodes[0].data.split(", ")  # Break Title into components
+    mag.append(m[2:])                           # Ignore 1st 2 characters from LHS
+    title.append(t)                             # Accept RHS as-is
 
 
 
