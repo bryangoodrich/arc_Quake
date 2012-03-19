@@ -12,7 +12,8 @@ from xml.dom import minidom  # used to parse XML content
 #===== At this time, hardcoding the past hour RSS for prototyping =====
 url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1hour-M0.xml"
 doc   = minidom.parse(urlopen(url))       # XML document
-items = doc.getElementsByTagName("item")  # Want to avoid same-name elemtns in root
+items = doc.getElementsByTagName("item")  # Want to avoid same-name elements in root.
+                                          # Returns list of 'item' document elements.
 
 
 
@@ -36,20 +37,24 @@ for item in items:
     nodes = item.getElementsByTagName("geo:long")
     lng.append(nodes[0].childNodes[0].data)     # Only 1 lng node
 
+    nodes = item.getElementsByTagName("pubDate")
+    time.append(nodes[0].childNodes[0].data)    # Only 1 date node
+
     nodes = item.getElementsByTagName("dc:subject")
     mclass.append(nodes[0].childNodes[0].data)  # mclass is 1st subject
 
     nodes = item.getElementsByTagName("dc:subject")
     depth.append(nodes[2].childNodes[0].data)   # depth is 3rd subject
 
-    nodes = item.getElementsByTagName("pubDate")
-    time.append(nodes[0].childNodes[0].data)    # Only 1 date node
-
-    nodes = item.getElementsByTagName("title")  # Title contains "M (mag), [title]"
-    m, t = node.childNodes[0].data.split(", ")  # Break Title into components
-    mag.append(m[2:])                           # Ignore 1st 2 characters from LHS
-    title.append(t)                             # Accept RHS as-is
+    nodes = item.getElementsByTagName("title")  
+    node  = nodes[0].childNodes[0].data  # Title contains 'M [mag], [title]'.
+    m, t  = node.split(", ")[0:2]        # Break Title into components. Some 
+                                         # descriptions have commas, so only keep
+                                         # 1st two list elements in split.
+    mag.append(m[2:])                    # Ignore 1st two characters from LHS.
+    title.append(t)                      # Accept RHS as-is.
 
 
 
 # Begin creating ArcGIS feature classes based on user inputs
+
