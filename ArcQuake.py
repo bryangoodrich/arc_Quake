@@ -17,13 +17,13 @@ items = doc.getElementsByTagName("item")  # Want to avoid same-name elemtns in r
 
 
 # Initialize Python list elements for attributes
-lat   = []  # Latitude
-lng   = []  # Longitude
-depth = []  # Depth of quake (km)
-title = []  # Description of location
-mag   = []  # Magnitude of quake
-class = []  # Class of magnitude (integer)
-time  = []  # Timestamp of event
+lat    = []  # Latitude
+lng    = []  # Longitude
+depth  = []  # Depth of quake (km)
+title  = []  # Description of location
+mag    = []  # Magnitude of quake
+mclass = []  # Class of magnitude (integer)
+time   = []  # Timestamp of event
 
 
 
@@ -35,7 +35,7 @@ for node in items.getElementsByTagName("geo:long"):
     lng.append(node.childNodes[0].data)
 
 for node in items.getElementsByTagName("dc:subject"):
-    class.append(node.childNodes[0].data)
+    mclass.append(node.childNodes[0].data)
 
 for node in items.getElementsByTagName("dc:subject"):
     depth.append(node.childNodes[2].data)  # 3rd dc:subject element in items
