@@ -4,6 +4,24 @@ from xml.dom import minidom # used to parse XML content
 
 # ========== User-defined functions ==========
 def getData(item):
+    def fracture(text):
+        # Expects the description text needing to be split. The
+        # description takes on the form
+        #
+        #     'M [magnitude], [title]'
+        #
+        # The title may contain commas, so except for the first field, all
+        # fields in the split are space-merged into a single list element.
+        # The first field is then appended to the generated list, save
+        # for its first 2 characters.
+        #
+        # This function returns a 2-element list containing title and
+        # magnitude for the given quake. 
+        text = text.split(', ')
+        d = [reduce(lambda x, y: x + ' ' + y, text[1:])]
+        d.append(text[0][2:])
+        return d
+
     # This function expects a USGS GeoRSS item.
     # Returns a Python dictionary.
     nodeList = item.childNodes  # Extract item's child nodes
@@ -13,22 +31,17 @@ def getData(item):
             'set', 'depth', 'guid']
 
     # This algorithm grabs the child nodes for each node in the node list.
-    # Since every node is atomic, its node list is singular. The values
-    # are appended to the values list. However, changes are required to
-    # parse the description that takes the form:
-    #     'M [magnitude], [title]'
-    #
-    # The [title] component may have comma separated names. This algorithm
-    # returns only the magnitude and the first portion of the title.
-    # The magnitude portion includes the "M " that is parsed out. These
-    # values are appended to the dictionary with appropriate keys.
+    # Since every node is atomic, 'child' is a singular list. The values
+    # are appended to the values list to create a dictionary.
+    # However, changes are required to parse the 'description' into
+    # magnitude and title components that it contains. 
     x = []  # List to be populated below to for dictionary values
     for child in [node.childNodes for node in nodeList]:
         x.append(child[0].nodeValue)
     x              = dict(zip(keys, x))  # 'zip' pairs up keys and values
-    m, t           = x['description'].split(', ')[0:2]
+    t, m           = fracture(x['description'])
     x['title']     = t
-    x['magnitude'] = m[2:]
+    x['magnitude'] = m
     return x
 
 
@@ -58,7 +71,7 @@ for item in items:
 for quake in feed:
     print "===== QUAKE ====="
     for key in quake:
-        print key, quake[key]
+        print key + ": ", quake[key]
     print
 
     
