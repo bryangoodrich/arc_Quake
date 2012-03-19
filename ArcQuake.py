@@ -25,7 +25,7 @@ def getData(item):
     x = []  # List to be populated below to for dictionary values
     for child in [node.childNodes for node in nodeList]:
         x.append(child[0].nodeValue)
-    x              = dict(zip(keys, x))
+    x              = dict(zip(keys, x))  # 'zip' pairs up keys and values
     m, t           = x['description'].split(', ')[0:2]
     x['title']     = t
     x['magnitude'] = m[2:]
