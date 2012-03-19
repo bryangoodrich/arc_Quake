@@ -1,5 +1,5 @@
-from urllib  import urlopen  # used to retrieve online information
-from xml.dom import minidom  # used to parse XML content
+from urllib  import urlopen # used to retrieve online information
+from xml.dom import minidom # used to parse XML content
 
 
 # ========== User-defined functions ==========
@@ -49,6 +49,16 @@ items = doc.getElementsByTagName("item") # Want to avoid same-name elements in r
 # Populate list with dictionaries of feed item components
 feed = []
 for item in items:
-    feed.append(getData(item.childNodes))
+    feed.append(getData(item))
 
 
+# An example of what is contained in the Python feed object
+# 'quake' is a list element that is itself a dictionary
+# and 'key' is the dictionary key that is looped over in a dictionary.
+for quake in feed:
+    print "===== QUAKE ====="
+    for key in quake:
+        print key, quake[key]
+    print
+
+    
