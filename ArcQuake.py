@@ -28,25 +28,26 @@ time   = []  # Timestamp of event
 
 
 # Populate list elements with appropriate components from GeoRSS
-for node in items.getElementsByTagName("geo:lat"):
-    lat.append(node.childNodes[0].data)
+for item in items:
+    for node in item.getElementsByTagName("geo:lat"):
+        lat.append(node.childNodes[0].data)
 
-for node in items.getElementsByTagName("geo:long"):
-    lng.append(node.childNodes[0].data)
+    for node in item.getElementsByTagName("geo:long"):
+        lng.append(node.childNodes[0].data)
 
-for node in items.getElementsByTagName("dc:subject"):
-    mclass.append(node.childNodes[0].data)
+    for node in item.getElementsByTagName("dc:subject"):
+        mclass.append(node.childNodes[0].data)
 
-for node in items.getElementsByTagName("dc:subject"):
-    depth.append(node.childNodes[2].data)  # 3rd dc:subject element in items
+    for node in item.getElementsByTagName("dc:subject"):
+        depth.append(node.childNodes[2].data)  # 3rd dc:subject element in items
 
-for node in items.getElementsByTagName("pubDate"):
-    time.append(node.childNodes[0].data)
+    for node in item.getElementsByTagName("pubDate"):
+        time.append(node.childNodes[0].data)
 
-for node in items.getElementsByTagName("title"):  # Title contains "M (mag), [title]"
-    m, t = node.childNodes[0].data.split(", ")    # Break Title into components
-    mag.append(m[2:])                             # Remove "M " from LHS
-    title.append(t)                               # Accept RHS as-is
+    for node in item.getElementsByTagName("title"):  # Title contains "M (mag), [title]"
+        m, t = node.childNodes[0].data.split(", ")    # Break Title into components
+        mag.append(m[2:])                             # Remove "M " from LHS
+        title.append(t)                               # Accept RHS as-is
 
 
 
