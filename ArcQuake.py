@@ -4,6 +4,8 @@ from xml.dom import minidom # used to parse XML content
 
 # ========== User-defined functions ==========
 def getData(item):
+    # This function expects a USGS GeoRSS item.
+    # Returns a Python dictionary.
     def fracture(text):
         # Expects the description text needing to be split. The
         # description takes on the form
@@ -11,34 +13,33 @@ def getData(item):
         #     'M [magnitude], [title]'
         #
         # The title may contain commas, so except for the first field, all
-        # fields in the split are space-merged into a single list element.
+        # fields in the split are merged into a single list element.
         # The first field is then appended to the generated list, save
         # for its first 2 characters.
         #
         # This function returns a 2-element list containing title and
         # magnitude for the given quake. 
         text = text.split(', ')
-        d = [reduce(lambda x, y: x + ' ' + y, text[1:])]
+        d = [reduce(lambda x, y: x + ', ' + y, text[1:])]
         d.append(text[0][2:])
         return d
 
-    # This function expects a USGS GeoRSS item.
-    # Returns a Python dictionary.
-    nodeList = item.childNodes  # Extract item's child nodes
 
     # These dictionary keys match the USGS GeoRSS item nodes
-    keys = ['full date', 'description', 'date', 'url', 'lat', 'long', 'class',
+    KEYS = ['full date', 'description', 'date', 'url', 'lat', 'long', 'class',
             'set', 'depth', 'guid']
+            
+    nodeList = item.childNodes  # Extract item's child nodes
 
     # This algorithm grabs the child nodes for each node in the node list.
     # Since every node is atomic, 'child' is a singular list. The values
     # are appended to the values list to create a dictionary.
     # However, changes are required to parse the 'description' into
-    # magnitude and title components that it contains. 
-    x = []  # List to be populated below to for dictionary values
+    # magnitude and title components that it contains. See 'fracture' above.
+    x = []  # List to be populated with dictionary values
     for child in [node.childNodes for node in nodeList]:
         x.append(child[0].nodeValue)
-    x              = dict(zip(keys, x))  # 'zip' pairs up keys and values
+    x              = dict(zip(KEYS, x))  # 'zip' pairs up keys and values
     t, m           = fracture(x['description'])
     x['title']     = t
     x['magnitude'] = m
