@@ -66,6 +66,15 @@ for item in items:
     feed.append(getData(item))
 
 
+
+# Convert Python data into geometry and ArcGIS feature classes
+# Example of working with Feature Classes and Cursors: 
+#   http://help.arcgis.com/en/arcgisdesktop/10.0/help/index.html#//002z0000001v000000
+# Example of working with Point Geometry to establish Feature Class:
+#   http://help.arcgis.com/en/arcgisdesktop/10.0/help/index.html#//000v000000n0000000
+
+
+
 # An example of what is contained in the Python feed object
 # 'quake' is a list element that is itself a dictionary
 # and 'key' is the dictionary key that is looped over in a dictionary.
