@@ -67,6 +67,9 @@ def getData(item):
     x['depth']     = x['depth'].split(' ')[0]    # keep only number portion; remove 'km'
     x['title']     = t
     x['magnitude'] = m
+    
+    # Remove unnecessary/redundant dictionary entries
+    del x['description'], x['set'], x['guid'], x['full date']
     return x
 #  end function
 
