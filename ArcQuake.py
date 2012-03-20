@@ -82,9 +82,6 @@ env.overwriteOutput = True  # Overwrite currently existing feature class
 #url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1hour-M0.xml"   # Past Hour
 #url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1day-M0.xml"    # Past Day
 url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs7day-M2.5.xml"  # Past Week
-doc   = minidom.parse(urlopen(url)) # XML document
-items = doc.getElementsByTagName("item") # Want to avoid same-name elements in root.
-                                         # Returns list of 'item' document elements.
 
 # Set projection for +proj=longlat +ellps=WGS84 +datum=WGS84
 prj     = "Coordinate Systems/Geographic Coordinate Systems/World/WGS 1984.prj"
@@ -94,9 +91,10 @@ opath   = "C:/temp/py/quake.shp"  # Hardcode location for prototyping
 
 
 # ========== Begin RSS Aggregation ==========
-feed = []
-for item in items:
-    feed.append(getData(item))
+doc   = minidom.parse(urlopen(url))        # XML document
+items = doc.getElementsByTagName("item")   # Want to avoid same-name elements in root.
+                                           # Returns list of 'item' document elements.
+feed  = [getData(item) for item in items]  # List of item dictionary
 
 
 
@@ -107,7 +105,7 @@ CreateFeatureclass(os.path.dirname(opath), os.path.basename(opath), "Point",
 AddField(opath,     'depth', 'FLOAT')
 AddField(opath, 'magnitude', 'FLOAT')
 AddField(opath,    'mclass', 'SHORT')
-AddField(opath,  'location', ' TEXT')
+AddField(opath,  'location',  'TEXT')
 # AddField(opath, 'date', 'DATE')
 # -- not sure about date formats in ArcGIS yet. Work on this later.
                           
@@ -115,10 +113,10 @@ AddField(opath,  'location', ' TEXT')
 # Connect to Feature Class and Populate Feature Table
 cur = arcpy.InsertCursor(opath)                # Connects to empty Feature Class
 for quake in feed:
+    feat           = cur.newRow()              # Define a new Row object on cursor
     lat            = float(quake['lat'])
     lng            = float(quake['long']) 
     pnt            = arcpy.Point(lng, lat)     # Create Point object
-    feat           = cur.newRow()              # Define a new Row object on cursor
     feat.shape     = arcpy.PointGeometry(pnt)  # Set geometry point class
     feat.depth     = float(quake['depth'])     # Set Depth
     feat.magnitude = float(quake['magnitude']) # Set Magnitude
