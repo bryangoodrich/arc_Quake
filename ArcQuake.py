@@ -10,7 +10,8 @@ def getData(item):
         # Expects the description text needing to be split. The
         # description takes on the form
         #
-        #     'M [magnitude], [title]'
+        #     'M [magnitude], [title]' 
+        #     'M 2.3, Northern California, California'  (example)
         #
         # The title may contain commas, so except for the first field, all
         # fields in the split are merged into a single list element.
