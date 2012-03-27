@@ -75,6 +75,20 @@ def getData(item):
 
 
 
+def createFeature(outpath, projection):
+    CreateFeatureclass(os.path.dirname(outpath), os.path.basename(outpath), "Point",
+                       spatial_reference = projection)
+    AddField(outpath,     'depth', 'FLOAT')
+    AddField(outpath, 'magnitude', 'FLOAT')
+    AddField(outpath,    'mclass', 'SHORT')
+    AddField(outpath,  'location',  'TEXT')
+    AddField(outpath,      'guid',  'TEXT')
+    # AddField(outpath, 'date', 'DATE')
+    # -- not sure about date formats in ArcGIS yet. Work on this later.
+# end function
+
+
+
 # ========== Set Parameters and Environmental Variables ==========
 # Set projection for +proj=longlat +ellps=WGS84 +datum=WGS84
 prj       = "Coordinate Systems/Geographic Coordinate Systems/World/WGS 1984.prj"
@@ -87,7 +101,7 @@ overwrite = arcpy.GetParameterAsText(2)
 
 
 # Capture GeoRSS XML and isolate its 'item' elements
-if   feedtype == "Hour:
+if   feedtype == "Hour":
     url = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1hour-M0.xml"
 elif feedtype == "Day":
     url = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1day-M0.xml"
@@ -106,21 +120,15 @@ feed  = [getData(item) for item in items]  # List of item dictionary
 
 # ========== Begin ArcGIS Representation ==========
 # Create feature class and add fields for additional Quake information
-if (overwrite and arcpy.Exists(outpath)):
+if not arcpy.Exists(outpath):
+    createFeature(outpath, prjFile)
+elif overwrite:
     arcpy.AddMessage("Removing Old Copy of Feature Class")
     arcpy.management.Delete(outpath)
+    createFeature(outpath, prjFile)
 
-CreateFeatureclass(os.path.dirname(outpath), os.path.basename(outpath), "Point",
-                   spatial_reference = prjFile)
-AddField(outpath,     'depth', 'FLOAT')
-AddField(outpath, 'magnitude', 'FLOAT')
-AddField(outpath,    'mclass', 'SHORT')
-AddField(outpath,  'location',  'TEXT')
-AddField(outpath,      'guid',  'TEXT')
-# AddField(outpath, 'date', 'DATE')
-# -- not sure about date formats in ArcGIS yet. Work on this later.
+
                           
-
 # Connect to Feature Class and Populate Feature Table
 cur = arcpy.InsertCursor(outpath)              # Connects to empty Feature Class
 for quake in feed:
