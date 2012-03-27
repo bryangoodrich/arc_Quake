@@ -89,6 +89,16 @@ def createFeature(outpath, projection):
 
 
 
+def checkRecord(current, data):
+    query = "'\quid\' = " +  current  # Create query to match current guid to any records
+    matches = arcpy.SearchCursor(data, query, fields = 'guid')  # Return guids of any matched record(s)
+    if len(matches) != 0:
+        return False  # Record guid is not new
+
+    return True  # Return that no matches exist
+
+
+
 # ========== Set Parameters and Environmental Variables ==========
 # Set projection for +proj=longlat +ellps=WGS84 +datum=WGS84
 prj       = "Coordinate Systems/Geographic Coordinate Systems/World/WGS 1984.prj"
@@ -130,19 +140,21 @@ elif overwrite:
 
                           
 # Connect to Feature Class and Populate Feature Table
-cur = arcpy.InsertCursor(outpath)              # Connects to empty Feature Class
+cur = arcpy.InsertCursor(outpath)                  # Connects to empty Feature Class
 for quake in feed:
-    feat           = cur.newRow()              # Define a new Row object on cursor
-    lat            = float(quake['lat'])
-    lng            = float(quake['long']) 
-    pnt            = arcpy.Point(lng, lat)     # Create Point object
-    feat.shape     = arcpy.PointGeometry(pnt)  # Set geometry point class
-    feat.guid      = quake['quid']             # Set USGS quake guid value
-    feat.depth     = float(quake['depth'])     # Set Depth
-    feat.magnitude = float(quake['magnitude']) # Set Magnitude
-    feat.mclass    = int(quake['class'])       # Set Magnitude Class
-    feat.location  = quake['title']            # Set Location Description
-    cur.insertRow(feat)                        # Populate Feature Class record
+    isNew = checkRecord(quake['quid'])             # --- NEEDS TO BE DEFINED ---
+    if isNew:                                      # If quake is not in feature, add it
+        feat           = cur.newRow()              # Define a new Row object on cursor
+        lat            = float(quake['lat'])
+        lng            = float(quake['long']) 
+        pnt            = arcpy.Point(lng, lat)     # Create Point object
+        feat.shape     = arcpy.PointGeometry(pnt)  # Set geometry point class
+        feat.guid      = quake['quid']             # Set USGS quake guid value
+        feat.depth     = float(quake['depth'])     # Set Depth
+        feat.magnitude = float(quake['magnitude']) # Set Magnitude
+        feat.mclass    = int(quake['class'])       # Set Magnitude Class
+        feat.location  = quake['title']            # Set Location Description
+        cur.insertRow(feat)                        # Populate Feature Class record
     
 
 
