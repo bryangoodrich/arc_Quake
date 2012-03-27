@@ -69,27 +69,30 @@ def getData(item):
     x['magnitude'] = m
     
     # Remove unnecessary/redundant dictionary entries
-    del x['description'], x['set'], x['guid'], x['full date']
+    del x['description'], x['set'], x['full date']
     return x
 #  end function
 
 
 
 # ========== Set Parameters and Environmental Variables ==========
-# opath = arcpy.GetParameterAsText(0) ...
-env.overwriteOutput = True  # Overwrite currently existing feature class
+# Set projection for +proj=longlat +ellps=WGS84 +datum=WGS84
+prj       = "Coordinate Systems/Geographic Coordinate Systems/World/WGS 1984.prj"
+prjFile   = os.path.join(arcpy.GetInstallInfo()["InstallDir"], prj)
+
+# Get Form parameters
+outpath   = arcpy.GetParameterAsText(0)
+feedtype  = arcpy.GetParameterAsText(1)
+overwrite = arcpy.GetParameterAsText(2)
 
 
 # Capture GeoRSS XML and isolate its 'item' elements
-#===== At this time, hardcoding the past hour RSS for prototyping =====
-#url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1hour-M0.xml"   # Past Hour
-#url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1day-M0.xml"    # Past Day
-url   = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs7day-M2.5.xml"  # Past Week
-
-# Set projection for +proj=longlat +ellps=WGS84 +datum=WGS84
-prj     = "Coordinate Systems/Geographic Coordinate Systems/World/WGS 1984.prj"
-prjFile = os.path.join(arcpy.GetInstallInfo()["InstallDir"], prj)
-opath   = "C:/temp/py/quake.shp"  # Hardcode location for prototyping
+if   feedtype == "Hour:
+    url = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1hour-M0.xml"
+elif feedtype == "Day":
+    url = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs1day-M0.xml"
+else:
+    url = "http://earthquake.usgs.gov/earthquakes/catalogs/eqs7day-M2.5.xml"
 
 
 
@@ -103,24 +106,30 @@ feed  = [getData(item) for item in items]  # List of item dictionary
 
 # ========== Begin ArcGIS Representation ==========
 # Create feature class and add fields for additional Quake information
-CreateFeatureclass(os.path.dirname(opath), os.path.basename(opath), "Point",
+if (overwrite and arcpy.Exists(outpath)):
+    arcpy.AddMessage("Removing Old Copy of Feature Class")
+    arcpy.management.Delete(outpath)
+
+CreateFeatureclass(os.path.dirname(outpath), os.path.basename(outpath), "Point",
                    spatial_reference = prjFile)
-AddField(opath,     'depth', 'FLOAT')
-AddField(opath, 'magnitude', 'FLOAT')
-AddField(opath,    'mclass', 'SHORT')
-AddField(opath,  'location',  'TEXT')
-# AddField(opath, 'date', 'DATE')
+AddField(outpath,     'depth', 'FLOAT')
+AddField(outpath, 'magnitude', 'FLOAT')
+AddField(outpath,    'mclass', 'SHORT')
+AddField(outpath,  'location',  'TEXT')
+AddField(outpath,      'guid',  'TEXT')
+# AddField(outpath, 'date', 'DATE')
 # -- not sure about date formats in ArcGIS yet. Work on this later.
                           
 
 # Connect to Feature Class and Populate Feature Table
-cur = arcpy.InsertCursor(opath)                # Connects to empty Feature Class
+cur = arcpy.InsertCursor(outpath)              # Connects to empty Feature Class
 for quake in feed:
     feat           = cur.newRow()              # Define a new Row object on cursor
     lat            = float(quake['lat'])
     lng            = float(quake['long']) 
     pnt            = arcpy.Point(lng, lat)     # Create Point object
     feat.shape     = arcpy.PointGeometry(pnt)  # Set geometry point class
+    feat.guid      = quake['quid']             # Set USGS quake guid value
     feat.depth     = float(quake['depth'])     # Set Depth
     feat.magnitude = float(quake['magnitude']) # Set Magnitude
     feat.mclass    = int(quake['class'])       # Set Magnitude Class
