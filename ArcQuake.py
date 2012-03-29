@@ -2,7 +2,29 @@
 # Author: Bryan Goodrich
 #         http://www.bryangoodrich.com
 # Date Created: 18 March 2012
-# Last Updated: 19 March 2012
+# Last Updated: 28 March 2012
+# -- Added parameters to accept ArcGIS script tool parameters.
+# -- Altered work flow based on trial runs so that the script defualts to 
+# -- appending new quakes to a feature class. But it checks if the name
+#    is new to begin with. If so, create the feature. If it isn't new, then
+#    check if 'overwrite' was set to True. If the feature is to be overwritten,
+#    delete the old copy and create the new feature. (If the environmental variable
+#    is set so that overwriting is automatic, this conditional can be set to just
+#    print the overwrite warning statement. However, with script validation, this may 
+#    be managed entirely different in a later version.)
+# -- Defined the checkRecord function to see if a current quake is new based on the USGS
+#    provided 'guid' value. If it is new, the record is added with the insert cursor. This
+#    may prove to be a poor programmatic approach at scale, but it appears to be efficient
+#    in prototypes, and a different approach is recommended if this were at at-scale script
+#    for mass storing quake records over time. 
+# -- From tests, this script works, but due to the way scrip tools operate, the remaining
+#    element of this project is validation. This will includ greying out the append option
+#    until a required feature class name is entered and checked that it already exists. 
+#    Currently, the tool doesn't allow overwriting recognized existing feature classes, but
+#    this is handled by the script. Either involving that in the validation script or bypassing
+#    that limitation will have to be examined in the final steps of this project. 
+#
+# 19 March 2012
 # -- Completely redesigned the RSS aggregation portion by creating the
 #    getData function and using list comprehension to simplify list
 #    processing. Also adapted the results into a final list of dictionary
@@ -89,13 +111,15 @@ def createFeature(outpath, projection):
 
 
 
-def checkRecord(current, data):
-    query = "'\quid\' = " +  current  # Create query to match current guid to any records
-    matches = arcpy.SearchCursor(data, query, fields = 'guid')  # Return guids of any matched record(s)
-    if len(matches) != 0:
-        return False  # Record guid is not new
-
-    return True  # Return that no matches exist
+def checkRecord(data, field):
+    query   = '"guid"=\'%s\'' % (field)
+    matches = arcpy.SearchCursor(data, query)  # Return matches based on current guid
+    nMatch  = len[match for match in matches]  # Number of matches to current quake guid
+    if nMatch == 0:
+        return True   # Current quake is new
+    else:
+        return False  # Current quake is not new
+# end function
 
 
 
@@ -107,7 +131,7 @@ prjFile   = os.path.join(arcpy.GetInstallInfo()["InstallDir"], prj)
 # Get Form parameters
 outpath   = arcpy.GetParameterAsText(0)
 feedtype  = arcpy.GetParameterAsText(1)
-overwrite = arcpy.GetParameterAsText(2)
+overwrite = arcpy.GetParameter(2)  # Return as object (True or False)
 
 
 # Capture GeoRSS XML and isolate its 'item' elements
@@ -142,14 +166,14 @@ elif overwrite:
 # Connect to Feature Class and Populate Feature Table
 cur = arcpy.InsertCursor(outpath)                  # Connects to empty Feature Class
 for quake in feed:
-    isNew = checkRecord(quake['quid'])             # --- NEEDS TO BE DEFINED ---
+    isNew = checkRecord(outpath, quake['guid'])    # Check if current quake guid is new
     if isNew:                                      # If quake is not in feature, add it
         feat           = cur.newRow()              # Define a new Row object on cursor
         lat            = float(quake['lat'])
         lng            = float(quake['long']) 
         pnt            = arcpy.Point(lng, lat)     # Create Point object
         feat.shape     = arcpy.PointGeometry(pnt)  # Set geometry point class
-        feat.guid      = quake['quid']             # Set USGS quake guid value
+        feat.guid      = quake['guid']             # Set USGS quake guid value
         feat.depth     = float(quake['depth'])     # Set Depth
         feat.magnitude = float(quake['magnitude']) # Set Magnitude
         feat.mclass    = int(quake['class'])       # Set Magnitude Class
@@ -158,7 +182,7 @@ for quake in feed:
     
 
 
-del cur  # Unlock table
+del cur, quake  # Unlock table
 
 
 
