@@ -1,0 +1,126 @@
+5 May 2012
+-- With help from gis.stackexchange.com, I followed a suggestion to change the output
+file parameter to 2 separate parameters: directory and file name. Originally tried 
+directory as a folder type, but this does not handle geodatabases. Altered it to 
+workspace. The file name was kept as a string. Set directory environment to default 
+to scratch workspace. File name has no default, forcing the only user input not set
+with a default. 
+
+-- Altered script format. Made boolean parameter an object with GetParameter instead
+of GetParameterAsText. 
+
+-- Set up tool validation as follows: overwrite parameter is disabled. If the workspace
+and file name have values and the file name has been altered (protecting the case that
+it is altered but made to have an empty value), then import the os.path library (should 
+probably change this to "from ... import ..." to just import the specific required tool:
+os.path.join that is used. If the output file (directory and file name) exists, then 
+enable the overwrite parameter. 
+
+-- Script tool tested on creating shapefile and creating GDB feature, tested on updating
+the shapefile and GDB feature with a different feed (appends new feed elements), and 
+tested on overwriting the shapefile and GDB feature. Everything worked out as of this
+latest rendition.
+
+-- Things not completed: did not include date field in aggregation. Simply have not toyed
+with the date data types. This is trivial and not crucial to this script tools development.
+
+24 March 2012
+-- Added parameters to accept ArcGIS script tool parameters.
+
+-- Altered work flow based on trial runs so that the script defaults to
+appending new quakes to a feature class. But it checks if the name
+is new to begin with. If so, create the feature. If it isn't new, then
+check if 'overwrite' was set to True. If the feature is to be overwritten,
+delete the old copy and create the new feature. (If the environmental variable
+is set so that overwriting is automatic, this conditional can be set to just
+print the overwrite warning statement. However, with script validation, this may
+be managed entirely different in a later version.)
+
+-- Defined the checkRecord function to see if a current quake is new based on the USGS
+provided 'guid' value. If it is new, the record is added with the insert cursor. This
+may prove to be a poor programmatic approach at scale, but it appears to be efficient
+in prototypes, and a different approach is recommended if this were at at-scale script
+for mass storing quake records over time.
+
+-- From tests, this script works, but due to the way scrip tools operate, the remaining
+element of this project is validation. This will includ greying out the append option
+until a required feature class name is entered and checked that it already exists.
+Currently, the tool doesn't allow overwriting recognized existing feature classes, but
+this is handled by the script. Either involving that in the validation script or bypassing
+that limitation will have to be examined in the final steps of this project.
+
+19 March 2012
+-- Completely redesigned the RSS aggregation portion by creating the
+getData function and using list comprehension to simplify list
+processing. Also adapted the results into a final list of dictionary
+entries that name each of the GeoRSS item properties that get used
+later in creating ArcGIS geometry objects.
+
+-- Added the ArcGIS section by importing appropriate modules and
+setting up a functioning framework that creates an empty
+feature class and populates it. The ESRI Desktop help pages demonstrate
+how easy it is to access spatial references based on a user's installation
+at http://help.arcgis.com/en/arcgisdesktop/10.0/help/index.html#//000v000000p6000000
+
+-- The next steps will require setting up the parameters to make this usable as
+an ArcMap/ArcCatalog script tool and then customizing validation and additional options.
+
+
+
+
+
+class ToolValidator:
+  """Class for validating a tool's parameter values and controlling
+  the behavior of the tool's dialog."""
+
+  def __init__(self):
+    """Setup arcpy and the list of tool parameters."""
+    import arcpy
+    self.params = arcpy.GetParameterInfo()
+
+
+  def initializeParameters(self):
+    """Refine the properties of a tool's parameters.  This method is
+    called when the tool is opened."""
+    self.params[3].enabled = False  # Overwrite Flag unavailable until
+                                    # currently existing file selected    
+    return
+
+  def updateParameters(self):
+    """Modify the values and properties of parameters before internal
+    validation is performed.  This method is called whenever a parmater
+    has been changed."""
+    if (self.params[0].value and self.params[1].altered and self.params[1].value):
+      import os.path
+      outfile = os.path.join(str(self.params[0].value), self.params[1].value)
+      if arcpy.Exists(outfile):
+        self.params[3].enabled = True
+    return
+
+  def updateMessages(self):
+    """Modify the messages created by internal validation for each tool
+    parameter.  This method is called after internal validation."""
+    return
+
+
+
+
+Parameters
+Path		Workspace	
+	Required
+	Input
+	Environment: scratchWorkspace
+File Name	string
+	Required
+	Input
+	
+Feed Type	String
+	Required
+	Input
+	Default: Hour
+	Filter: ValueList (Hour, Day, Week)
+
+Overwrite	Boolean
+	Required
+	Input
+	Default: false

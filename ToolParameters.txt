@@ -1,0 +1,19 @@
+Path		Workspace	
+	Required
+	Input
+	Environment: scratchWorkspace
+
+File Name	String
+	Required
+	Input
+	
+Feed Type	String
+	Required
+	Input
+	Default: Hour
+	Filter: ValueList (Hour, Day, Week)
+
+Overwrite	Boolean
+	Required
+	Input
+	Default: false
