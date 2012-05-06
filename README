@@ -1,11 +1,13 @@
-Most people using internet technology today have come across an RSS feed. These
-are what drive twitter feeds, blogs, and news. The RSS (or ATOM) standard let these
-generated XML documents be easily incorporated by any designed aggregator. The design
-of GeoRSS is simple: include XML namespace for spatial geometry. This Python script
-is designed to handle the USGS earthquake GeoRSS by being an aggregator that creates
-an aggregation via a feature class for ArcGIS. When the user selects an already existing 
-feature class, the behavior is to update the feature with the new information not already 
-contained within. There is a flag to overwrite the class to begin a fresh aggregation.
+Most people using internet technology today have come across an RSS feed. 
+These are what drive twitter feeds, blogs, and news. The RSS (or ATOM) 
+standard let these generated XML documents be easily incorporated by any
+designed aggregator. The design of GeoRSS is simple: include XML namespace
+for spatial geometry. This Python script is designed to handle the USGS 
+earthquake GeoRSS by being an aggregator that creates an aggregation via a
+feature class for ArcGIS. When the user selects an already existing feature
+class, the behavior is to update the feature with the new information not 
+already contained within. There is a flag to overwrite the class to begin a
+fresh aggregation.
 
 The USGS earthquake feeds are listed here. 
 http://earthquake.usgs.gov/earthquakes/catalogs/
