@@ -1,9 +1,14 @@
-The code here is a Python script loadable into ArcGIS that makes dynamic use of the USGS earthquake georss feeds located at
+Most people using internet technology today have come across an RSS feed. These
+are what drive twitter feeds, blogs, and news. The RSS (or ATOM) standard let these
+generated XML documents be easily incorporated by any designed aggregator. The design
+of GeoRSS is simple: include XML namespace for spatial geometry. This Python script
+is designed to handle the USGS earthquake GeoRSS by being an aggregator that creates
+an aggregation via a feature class for ArcGIS. When the user selects an already existing 
+feature class, the behavior is to update the feature with the new information not already 
+contained within. There is a flag to overwrite the class to begin a fresh aggregation.
 
+The USGS earthquake feeds are listed here. 
 http://earthquake.usgs.gov/earthquakes/catalogs/
 
-There are feeds for the past hour, day, week, or month, provided in ATOM, RSS 2.0, or CSV formats. This script utilizes the RSS version that provide the most information--i.e., the lowest restriction by magnitude size for a given feed class. 
-
-When converted into an ArcGIS tool, the interface should include an option for which feed to use. The script then uses the appropriate XML document to access that feed, extract the relevant information (lat, long, depth, time, etc.), and convert it at that moment into a timestamped point feature class. 
-
-The idea is that this will allow users to quickly access the spatial information provided by USGS within their GIS. In ArcMap 10, you can simply load any of the online basemaps and symbolize the feature class as desired to begin getting an idea about the events. This script can easily be modified or used as is with an intended protocol to allow the user to build their own running database of these phenomena. 
+The ArcGIS script tool + toolbox can be obtained from
+http://www.dropbox.com/ ... to come ...
